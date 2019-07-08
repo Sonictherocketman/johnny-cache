@@ -31,7 +31,9 @@ class CacheItem:
         if settings.MAX_CACHE_SECONDS == 0:
             return False
 
-        expires = self.created_at + timedelta(seconds=settings.MAX_CACHE_SECONDS)
+        expires = (
+            self.created_at + timedelta(seconds=settings.MAX_CACHE_SECONDS)
+        )
         return expires < datetime.now()
 
     @property
@@ -69,8 +71,12 @@ class CacheItem:
 
         last_modified = head_check.headers.get('last-modified', None)
         logger.debug(f'Trying Last-Modified... {last_modified}')
-        if last_modified and self.last_modified and parse(last_modified) <= self.last_modified:
-            return False
+        if (
+            last_modified
+            and self.last_modified
+            and parse(last_modified) <= self.last_modified
+        ):
+            return True
 
         return False
 

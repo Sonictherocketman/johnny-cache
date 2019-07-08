@@ -1,3 +1,7 @@
 # Test runner
 
 pytest==5.0.1
+
+# Linting
+
+flake8==3.7.7

@@ -51,10 +51,11 @@ def etag_cache_url(request):
     from uuid import uuid4
     return f'http://etag_cache_url.com/{uuid4()}/path?query=param&param=two'
 
+
 @pytest.fixture
 def etag_cache_item(request, etag_cache_url):
     from . import cache
-    from datetime import datetime, timedelta
+    from datetime import datetime
 
     return cache.CacheItem(
         url=etag_cache_url,
@@ -69,7 +70,8 @@ def etag_cache_item(request, etag_cache_url):
 @pytest.fixture
 def last_modified_cache_url(request):
     from uuid import uuid4
-    return f'http://last_modified_cache_url.com/{uuid4()}/path?query=param&param=two'
+    return f'http://last_modified_cache_url.com/{uuid4()}'
+
 
 @pytest.fixture
 def last_modified_cache_item(request, last_modified_cache_url):
@@ -164,8 +166,10 @@ def test_last_modified(last_modified_cache_url, preloaded_cache, monkeypatch):
     from . import cache
     import requests
     monkeypatch.setattr(cache, 'request_cache', preloaded_cache)
+
+    cache_item = preloaded_cache[last_modified_cache_url]
     monkeypatch.setattr(requests, 'head', lambda _: MockResponse(
-        last_modified=preloaded_cache[last_modified_cache_url].last_modified.isoformat()
+        last_modified=cache_item.last_modified.isoformat()
     ))
 
     entry = cache.check(last_modified_cache_url)

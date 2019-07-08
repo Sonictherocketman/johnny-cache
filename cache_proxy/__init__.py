@@ -1,1 +1,1 @@
-from .cache_proxy import app
+from .cache_proxy import app  # noqa

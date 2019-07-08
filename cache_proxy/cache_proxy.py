@@ -60,7 +60,9 @@ def proxy(path):
         )
 
     if not response.text:
-        logger.debug(f'URL {url} not modified since {item.last_modified.isoformat()}')
+        logger.debug(
+            f'URL {url} not modified since {item.last_modified.isoformat()}'
+        )
         return Response(
             item.text,
             200,
