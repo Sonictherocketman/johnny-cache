@@ -1,5 +1,7 @@
 # Cache Proxy
 
+> This Software is in Beta
+
 *A simple forward caching proxy. Useful for reducing the bandwidth of polling or crawling public sites.*
 
 I built this because a feed reader I run, called [Pine.blog](https://pine.blog), constantly needs to crawl sites and poll feeds, and doing all of that for thousands of sites can eat up bandwidth, and really overload some sites (especially those on shared hosting).
