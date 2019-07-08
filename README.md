@@ -50,3 +50,10 @@ For a list of all the supported options, please refer to `docker-compose.yml`.
 - `LOG_LEVEL`: The level that the proxy will log.
 - `LOG_LOCATION`: Where to store the logs.
 
+
+## Contributing
+
+Pull Requests are welcome. I may not be the best at responding to feedback, but I'll do my best. Features that go out of scope will be rejected.
+
+Please ensure all linting and testing passes before making your PR (use './preflight' to be sure).
+
