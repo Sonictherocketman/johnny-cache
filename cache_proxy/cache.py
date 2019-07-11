@@ -3,12 +3,21 @@ from datetime import datetime, timedelta
 import logging
 
 from dateutil.parser import parse
+import pytz
 import requests
 
 from . import settings
 
 
 logger = logging.getLogger('proxy')
+
+
+UNCACHED_HEADERS = (
+    'Age',
+    'Cache-Control',
+    'Date',
+    'X-Cache',
+)
 
 
 request_cache = {
@@ -20,7 +29,8 @@ request_cache = {
 class CacheItem:
     """ A record in the cache. """
     url: str
-    text: str
+    raw_contents: bytes
+    headers: dict
     etag: str
     expires: datetime
     last_modified: datetime
@@ -34,7 +44,7 @@ class CacheItem:
         expires = (
             self.created_at + timedelta(seconds=settings.MAX_CACHE_SECONDS)
         )
-        return expires < datetime.now()
+        return expires < datetime.now(pytz.utc)
 
     @property
     def is_valid(self):
@@ -47,13 +57,19 @@ class CacheItem:
         )
 
         if not self.expires and not self.last_modified and not self.etag:
+            logger.debug('No cache information.')
+            return False
+
+        if self.etag == '-1':
+            logger.debug(f'Forcing uncached version due to Etag: {self.etag}')
             return False
 
         if self.is_expired:
+            logger.debug('CacheItem has expired.')
             return False
 
-        logger.debug(f'Trying Expires... {self.expires}')
-        if self.expires and self.expires > datetime.now():
+        if self.expires and self.expires > datetime.now(pytz.utc):
+            logger.debug('Using cached version due to Expires.')
             return True
 
         logger.debug(f'>>> HEAD {self.url}')
@@ -100,18 +116,25 @@ def get(url):
     return request_cache.get(url, None)
 
 
-def add(url, response):
+def add(url, response, raw_contents):
     etag = response.headers.get('etag', None)
     expires = response.headers.get('expires', None)
     last_modified = response.headers.get('last-modified', None)
 
+    headers = {
+        key: value
+        for key, value in dict(response.headers).items()
+        if key not in UNCACHED_HEADERS
+    }
+
     request_cache[url] = CacheItem(
         url=url,
-        text=response.text,
+        raw_contents=raw_contents,
+        headers=headers,
         etag=etag,
         expires=parse(expires) if expires else None,
         last_modified=parse(last_modified) if last_modified else None,
-        created_at=datetime.now(),
+        created_at=datetime.now(pytz.utc),
     )
 
     logger.debug(

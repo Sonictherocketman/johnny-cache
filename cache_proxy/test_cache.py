@@ -14,14 +14,16 @@ def uncached_cache_url(request):
 def uncached_cache_item(request, uncached_cache_url):
     from . import cache
     from datetime import datetime
+    import pytz
 
     return cache.CacheItem(
         url=uncached_cache_url,
-        text='',
+        raw_contents=b'',
+        headers={},
         etag=None,
         expires=None,
         last_modified=None,
-        created_at=datetime.now()
+        created_at=datetime.now(pytz.utc)
     )
 
 
@@ -35,14 +37,16 @@ def expired_cache_url(request):
 def expired_cache_item(request, expired_cache_url):
     from . import cache
     from datetime import datetime, timedelta
+    import pytz
 
     return cache.CacheItem(
         url=expired_cache_url,
-        text='',
+        raw_contents=b'',
+        headers={},
         etag=None,
-        expires=datetime.now() + timedelta(hours=1),
+        expires=datetime.now(pytz.utc) + timedelta(hours=1),
         last_modified=None,
-        created_at=datetime.now()
+        created_at=datetime.now(pytz.utc)
     )
 
 
@@ -56,14 +60,16 @@ def etag_cache_url(request):
 def etag_cache_item(request, etag_cache_url):
     from . import cache
     from datetime import datetime
+    import pytz
 
     return cache.CacheItem(
         url=etag_cache_url,
-        text='',
+        raw_contents=b'',
+        headers={},
         etag='abcd-efgh-ijkl-mnop',
         expires=None,
         last_modified=None,
-        created_at=datetime.now()
+        created_at=datetime.now(pytz.utc)
     )
 
 
@@ -77,14 +83,16 @@ def last_modified_cache_url(request):
 def last_modified_cache_item(request, last_modified_cache_url):
     from . import cache
     from datetime import datetime, timedelta
+    import pytz
 
     return cache.CacheItem(
         url=last_modified_cache_url,
-        text='',
+        raw_contents=b'',
+        headers={},
         etag=None,
         expires=None,
-        last_modified=datetime.now() - timedelta(days=3),
-        created_at=datetime.now()
+        last_modified=datetime.now(pytz.utc) - timedelta(days=3),
+        created_at=datetime.now(pytz.utc)
     )
 
 

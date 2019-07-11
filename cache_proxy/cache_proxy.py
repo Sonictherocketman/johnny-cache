@@ -24,31 +24,44 @@ def proxy(path):
         return Response('', 405)
 
     host = request.headers['host']
-    url = f'http://{host}{request.full_path}'
+    url = f'https://{host}{request.full_path}'
 
     try:
         check = cache.check(url)
-    except Exception:
+    except Exception as e:
+        logger.debug(f'Exception in cache check {e}')
         pass
     else:
         if check:
             logger.info(f'HIT: {url}')
             return Response(
-                check.text,
+                check.raw_contents,
                 200,
-                {'X-Cache': 'HIT'},
+                {'X-Cache': 'HIT', **check.headers},
             )
 
     headers = {}
 
     item = cache.get(url)
     if item and not item.is_expired and item.last_modified:
-        headers = {
-            'If-Modified-Since': formatdate(item.last_modified.timestamp()),
-        }
+        headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
+
+    if item and not item.is_expired and item.etag:
+        headers['If-None-Match'] = item.etag
 
     logger.debug(f'Requesing resource: {url}\n{headers}')
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers, stream=True)
+    except Exception:
+        try:
+            # Try again with plain-text HTTP
+            response = requests.get(
+                url.replace('https://', 'http://'),
+                headers=headers,
+                stream=True,
+            )
+        except Exception as e:
+            return Response(f'Error contacting {url}.\n{e}', 500)
 
     try:
         response.raise_for_status()
@@ -59,21 +72,21 @@ def proxy(path):
             {'X-Cache': 'MISS', **dict(response.headers)}
         )
 
-    if not response.text:
-        logger.debug(
-            f'URL {url} not modified since {item.last_modified.isoformat()}'
-        )
+    raw_contents = response.raw.read()
+
+    if item and not raw_contents:
+        logger.debug(f'URL {url} not modified since last attempt.')
         return Response(
-            item.text,
+            item.raw_contents,
             200,
-            {'X-Cache': 'HIT'},
+            {'X-Cache': 'HIT', **dict(response.headers)},
         )
 
-    cache.add(url, response)
+    cache.add(url, response, raw_contents)
 
     logger.info(f'MISS: {url}.')
     return Response(
-        response.text,
+        raw_contents,
         response.status_code,
         {'X-Cache': 'MISS', **dict(response.headers)}
     )
