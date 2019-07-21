@@ -1,4 +1,4 @@
-# Cache Proxy
+# Johnny Cache
 
 > This Software is in Beta
 
@@ -11,9 +11,9 @@ This caching proxy is meant to be a forward proxy between your servers and the p
 
 ## Supported Caching Methods
 
-Cache Proxy will aggressively cache responses to ensure that your requests only reach the site in question when it absolutely has to, and you can configure this behavior to fit your needs.
+Johnny will aggressively cache responses to ensure that your requests only reach the site in question when it absolutely has to, and you can configure this behavior to fit your needs.
 
-Cache Proxy uses:
+Johnny checks for cached requests using:
 - Proxy Cache `Expires` Headers
 - HTTP `Last-Modified` Headers
 - HTTP `ETag` Headers
@@ -23,7 +23,7 @@ When a request misses the cache due to an expired cache entry, an `If-Modified-S
 
 ## Usage
 
-Cache Proxy is Docker-ready. If you have Docker-Compose installed, then simply run the following:
+Johnny is Docker-ready. If you have Docker-Compose installed, then simply run the following:
 
 ```
 $ docker-compose up -d
@@ -31,13 +31,13 @@ $ docker-compose up -d
 
 ### Adding to Docker-Compose
 
-If you already have a Docker-Compose based application, then you can add Cache Proxy to your stack by adding the following to your `docker-compose.yml`.
+If you already have a Docker-Compose based application, then you can add Johnny to your stack by adding the following to your `docker-compose.yml`.
 
 ```
   cache_proxy:
     build:
       # Change the tag to whichever version you'd prefer.
-      context: https://github.com/Sonictherocketman/cache-proxy#master
+      context: https://github.com/Sonictherocketman/johnny-cache#master
       dockerfile: Dockerfile
 ```
 
@@ -49,6 +49,11 @@ For a list of all the supported options, please refer to `docker-compose.yml`.
 - `MAX_CACHE_SECONDS`: The maximum number of seconds to keep a response in the cache (default 0 - forever). A negative value will cause caching to be disabled.
 - `LOG_LEVEL`: The level that the proxy will log.
 - `LOG_LOCATION`: Where to store the logs.
+
+
+## Supported Cache Operations
+
+Johnny supports
 
 
 ## Contributing
