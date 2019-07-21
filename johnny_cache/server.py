@@ -45,11 +45,12 @@ def proxy(path):
 
     headers = {}
 
-    item = cache.get(url)
-    if item and not item.is_expired and item.etag:
-        headers['If-None-Match'] = item.etag
-    elif item and not item.is_expired and item.last_modified:
-        headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
+    if cache_control != NO_STORE:
+        item = cache.get(url)
+        if item and not item.is_expired and item.etag:
+            headers['If-None-Match'] = item.etag
+        elif item and not item.is_expired and item.last_modified:
+            headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
 
     logger.debug(f'Requesing resource: {url}\n{headers}')
     try:

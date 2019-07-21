@@ -15,7 +15,7 @@ services:
       # - HTTP_USERS=admin:secret
     # The default log location will put logs here.
     # volumes:
-    #   - /opt/cache-proxy:/opt
+    #   - /opt/johnny-cache:/opt
     ports:
       # Only expose the service to local
       - 127.0.0.1:8000:8000

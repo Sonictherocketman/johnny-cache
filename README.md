@@ -18,7 +18,7 @@ Johnny checks for cached requests using:
 - HTTP `Last-Modified` Headers
 - HTTP `ETag` Headers
 
-When a request misses the cache due to an expired cache entry, an `If-Modified-Since` header is added to your request giving the destination server one last chance to leverage the cache.
+When a request misses the cache due to an expired cache entry, an `If-Modified-Since` or `If-None-Match` header (depending on which is available) is added to your request giving the destination server one last chance to leverage the cache.
 
 
 ## Usage
@@ -53,7 +53,9 @@ For a list of all the supported options, please refer to `docker-compose.yml`.
 
 ## Supported Cache Operations
 
-Johnny supports
+Johnny supports the following `Cache-Control` directives:
+
+- `no-store`: Johnny will simply forward your request with no additional information attached. This entirely bypasses the cache.
 
 
 ## Contributing

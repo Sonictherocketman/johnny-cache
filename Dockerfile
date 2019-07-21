@@ -19,7 +19,7 @@ RUN (pip install -r requirements.txt)
 COPY . .
 
 # Production Setup
-CMD gunicorn cache_proxy.wsgi \
+CMD gunicorn johnny_cache.wsgi \
     -w 2 \
     -k gevent \
     --worker-connections=2000 \

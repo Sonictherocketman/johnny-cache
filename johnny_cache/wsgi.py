@@ -1,4 +1,4 @@
-from cache_proxy import app
+from .server import app
 
 # Bootstrap for Gunicorn
 application = app  # noqa
