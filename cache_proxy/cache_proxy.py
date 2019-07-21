@@ -16,6 +16,9 @@ logging.basicConfig(
 logger = logging.getLogger('proxy')
 
 
+NO_STORE = 'no-store'
+
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 @auth.requires_auth
@@ -26,28 +29,27 @@ def proxy(path):
     host = request.headers['host']
     url = f'https://{host}{request.full_path}'
 
-    try:
-        check = cache.check(url)
-    except Exception as e:
-        logger.debug(f'Exception in cache check {e}')
-        pass
-    else:
-        if check:
-            logger.info(f'HIT: {url}')
-            return Response(
-                check.raw_contents,
-                200,
-                {'X-Cache': 'HIT', **check.headers},
-            )
+    cache_control = request.headers.get('cache-control', '').lower()
+
+    logger.debug(f'Using client provided cache policy: {cache_control}')
+    if cache_control != NO_STORE:
+        try:
+            check = cache.check(url)
+        except Exception as e:
+            logger.error(f'Exception in cache check {e}')
+            pass
+        else:
+            if check:
+                logger.info(f'HIT: {url}')
+                return Response('', 304)
 
     headers = {}
 
     item = cache.get(url)
-    if item and not item.is_expired and item.last_modified:
-        headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
-
     if item and not item.is_expired and item.etag:
         headers['If-None-Match'] = item.etag
+    elif item and not item.is_expired and item.last_modified:
+        headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
 
     logger.debug(f'Requesing resource: {url}\n{headers}')
     try:
@@ -63,30 +65,21 @@ def proxy(path):
         except Exception as e:
             return Response(f'Error contacting {url}.\n{e}', 500)
 
+    logger.info(f'MISS: {url}.')
     try:
         response.raise_for_status()
     except requests.HTTPError:
         return Response(
-            '',
+            response.raw.read(),
             response.status_code,
             {'X-Cache': 'MISS', **dict(response.headers)}
         )
 
-    raw_contents = response.raw.read()
+    if cache_control != NO_STORE:
+        cache.add(url, response)
 
-    if item and not raw_contents:
-        logger.debug(f'URL {url} not modified since last attempt.')
-        return Response(
-            item.raw_contents,
-            200,
-            {'X-Cache': 'HIT', **dict(response.headers)},
-        )
-
-    cache.add(url, response, raw_contents)
-
-    logger.info(f'MISS: {url}.')
     return Response(
-        raw_contents,
+        response.raw.read(),
         response.status_code,
         {'X-Cache': 'MISS', **dict(response.headers)}
     )

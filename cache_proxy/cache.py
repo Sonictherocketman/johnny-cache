@@ -29,7 +29,6 @@ request_cache = {
 class CacheItem:
     """ A record in the cache. """
     url: str
-    raw_contents: bytes
     headers: dict
     etag: str
     expires: datetime
@@ -116,7 +115,7 @@ def get(url):
     return request_cache.get(url, None)
 
 
-def add(url, response, raw_contents):
+def add(url, response):
     etag = response.headers.get('etag', None)
     expires = response.headers.get('expires', None)
     last_modified = response.headers.get('last-modified', None)
@@ -129,7 +128,6 @@ def add(url, response, raw_contents):
 
     request_cache[url] = CacheItem(
         url=url,
-        raw_contents=raw_contents,
         headers=headers,
         etag=etag,
         expires=parse(expires) if expires else None,

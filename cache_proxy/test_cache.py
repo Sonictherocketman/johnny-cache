@@ -18,7 +18,6 @@ def uncached_cache_item(request, uncached_cache_url):
 
     return cache.CacheItem(
         url=uncached_cache_url,
-        raw_contents=b'',
         headers={},
         etag=None,
         expires=None,
@@ -41,7 +40,6 @@ def expired_cache_item(request, expired_cache_url):
 
     return cache.CacheItem(
         url=expired_cache_url,
-        raw_contents=b'',
         headers={},
         etag=None,
         expires=datetime.now(pytz.utc) + timedelta(hours=1),
@@ -64,7 +62,6 @@ def etag_cache_item(request, etag_cache_url):
 
     return cache.CacheItem(
         url=etag_cache_url,
-        raw_contents=b'',
         headers={},
         etag='abcd-efgh-ijkl-mnop',
         expires=None,
@@ -87,7 +84,6 @@ def last_modified_cache_item(request, last_modified_cache_url):
 
     return cache.CacheItem(
         url=last_modified_cache_url,
-        raw_contents=b'',
         headers={},
         etag=None,
         expires=None,
