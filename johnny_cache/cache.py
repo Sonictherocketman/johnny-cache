@@ -116,9 +116,15 @@ def get(url):
 
 
 def add(url, response):
-    etag = response.headers.get('etag', None)
-    expires = response.headers.get('expires', None)
-    last_modified = response.headers.get('last-modified', None)
+    expires = response.headers.get('expires')
+    last_modified = response.headers.get('last-modified')
+    etag = response.headers.get('etag')
+    if etag:
+        etag = (
+            etag
+            .replace('W/', '')  # replace weak comparison marker
+            .replace('"', '')   # replace quotes
+        )
 
     headers = {
         key: value

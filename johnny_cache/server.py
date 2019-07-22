@@ -26,12 +26,20 @@ def proxy(path):
     if request.method != 'GET':
         return Response('', 405)
 
+    # The protocol can come from another proxy, or from a custom X-Proto header.
+    # If nothing is present, default to HTTP.
+    proto = request.headers.get(
+        'x-forwarded-proto',
+        request.headers.get('x-proto', 'http')
+    )
+
     host = request.headers['host']
-    url = f'https://{host}{request.full_path}'
+    url = f'{proto}://{host}{request.full_path}'
 
     cache_control = request.headers.get('cache-control', '').lower()
+    if cache_control:
+        logger.debug(f'Using client provided cache policy: {cache_control}')
 
-    logger.debug(f'Using client provided cache policy: {cache_control}')
     if cache_control != NO_STORE:
         try:
             check = cache.check(url)
@@ -45,6 +53,11 @@ def proxy(path):
 
     headers = {}
 
+    user_agent = request.headers.get('user-agent', None)
+    if user_agent:
+        logger.debug(f'Using client provided user-agent: {user_agent}')
+        headers['User-Agent'] = user_agent
+
     if cache_control != NO_STORE:
         item = cache.get(url)
         if item and not item.is_expired and item.etag:
@@ -52,38 +65,20 @@ def proxy(path):
         elif item and not item.is_expired and item.last_modified:
             headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
 
-    logger.debug(f'Requesing resource: {url}\n{headers}')
-    try:
-        response = requests.get(url, headers=headers, stream=True)
-    except Exception:
-        try:
-            # Try again with plain-text HTTP
-            response = requests.get(
-                url.replace('https://', 'http://'),
-                headers=headers,
-                stream=True,
-            )
-        except Exception as e:
-            return Response(f'Error contacting {url}.\n{e}', 500)
-
     logger.info(f'MISS: {url}.')
-    try:
-        response.raise_for_status()
-    except requests.HTTPError:
-        return Response(
-            response.raw.read(),
+    with requests.get(url, headers=headers) as response:
+        if response.ok and cache_control != NO_STORE:
+            cache.add(url, response)
+
+        response_headers = {}
+        if response.headers.get('content-type', None):
+            response_headers['Content-Type'] = response.headers['content-type']
+
+        return (
+            response.text,
             response.status_code,
-            {'X-Cache': 'MISS', **dict(response.headers)}
+            {'X-Cache': 'MISS', **response_headers},
         )
-
-    if cache_control != NO_STORE:
-        cache.add(url, response)
-
-    return Response(
-        response.raw.read(),
-        response.status_code,
-        {'X-Cache': 'MISS', **dict(response.headers)}
-    )
 
 
 if __name__ == '__main__':
