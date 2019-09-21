@@ -48,7 +48,7 @@ For a list of all the supported options, please refer to `docker-compose.yml`.
 
 - `MAX_CACHE_SECONDS`: The maximum number of seconds to keep a response in the cache (default 0 - forever). A negative value will cause caching to be disabled.
 - `LOG_LEVEL`: The level that the proxy will log.
-- `LOG_LOCATION`: Where to store the logs.
+- `LOG_LOCATION`: Where to store the logs. The defaulr value of '-' will log to stdout.
 
 
 ## Supported Cache Operations

@@ -10,7 +10,6 @@ services:
       # Expire all cached items after an hour.
       - MAX_CACHE_SECONDS=3600
       - LOG_LEVEL=info
-      - LOG_LOCATION=/opt/proxy.log
       # Add HTTP users here (username:password comma-separated)
       # - HTTP_USERS=admin:secret
     # The default log location will put logs here.

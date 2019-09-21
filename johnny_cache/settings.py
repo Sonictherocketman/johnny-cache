@@ -3,7 +3,7 @@ import logging
 
 
 LOG_LEVEL = getattr(logging, os.environ.get('LOG_LEVEL', 'info').upper())
-LOG_LOCATION = os.environ.get('LOG_LOCATION', './proxy.log')
+LOG_LOCATION = os.environ.get('LOG_LOCATION', '-')
 
 
 # Authentication Settings

@@ -1,5 +1,6 @@
 from email.utils import formatdate
 import logging
+import sys
 
 from flask import Flask, request, Response
 import requests
@@ -9,11 +10,20 @@ from . import settings, auth, cache
 
 app = Flask(__name__)
 
-logging.basicConfig(
-    filename=settings.LOG_LOCATION,
-    level=settings.LOG_LEVEL
-)
-logger = logging.getLogger('proxy')
+
+if settings.LOG_LOCATION == '-':
+    logging_config = dict(
+        handlers=(logging.StreamHandler(sys.stdout),),
+        level=settings.LOG_LEVEL
+    )
+else:
+    logging_config = dict(
+        filename=settings.LOG_LOCATION,
+        level=settings.LOG_LEVEL
+    )
+
+logging.basicConfig(**logging_config)
+logger = logging.getLogger('johnnycache')
 
 
 NO_STORE = 'no-store'
@@ -75,7 +85,7 @@ def proxy(path):
             response_headers['Content-Type'] = response.headers['content-type']
 
         return (
-            response.text,
+            response.content,
             response.status_code,
             {'X-Cache': 'MISS', **response_headers},
         )
