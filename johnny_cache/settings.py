@@ -19,3 +19,5 @@ else:
 # Cache Settings
 
 MAX_CACHE_SECONDS = int(os.environ.get('MAX_CACHE_SECONDS', 0))
+CACHE_LOCATION = os.environ.get('CACHE_LOCATION', '.')
+CACHE_NAME = os.environ.get('CACHE_NAME', 'johnny.cache')

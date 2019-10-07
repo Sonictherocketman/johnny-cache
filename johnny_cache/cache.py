@@ -1,15 +1,16 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+import os.path
 
 from dateutil.parser import parse
 import pytz
+import json
+
 import requests
 
 from . import settings
-
-
-logger = logging.getLogger('proxy')
+from .logger import logger
 
 
 UNCACHED_HEADERS = (
@@ -19,10 +20,39 @@ UNCACHED_HEADERS = (
     'X-Cache',
 )
 
+class PersistedCache(object):
 
-request_cache = {
-    # A cache of url:CacheItem pairs.
-}
+    store = {}
+
+    def __init__(self, cache_location):
+        self.cache_location = cache_location
+        try:
+            self.store.update(self.load(cache_location))
+        except IOError:
+            logger.warn('No existing cache detected. Will create one.')
+        finally:
+            logger.info(f'Cache prepopulated with {len(self.store.keys())} items.')
+
+    def get(self, key):
+        return self.store.get(key, None)
+
+    def set(self, key, value):
+        self.store[key] = value
+        self.save()
+
+    def save(self):
+        with open(self.cache_location, 'w+') as f:
+            json.dump({
+                key: cache_item.to_json()
+                for key, cache_item in self.store.items()
+            }, f)
+
+    def load(self, cache_location):
+        with open(cache_location, 'r+') as f:
+            return {
+                key: CacheItem.from_json(value)
+                for key, value in json.load(f).items()
+            }
 
 
 @dataclass
@@ -95,12 +125,40 @@ class CacheItem:
 
         return False
 
+    def to_json(self):
+        return [
+            self.url,
+            self.headers,
+            self.etag,
+            self.expires.isoformat() if self.expires else None,
+            self.last_modified.isoformat() if self.last_modified else None,
+            self.created_at.isoformat(),
+        ]
+
+    @classmethod
+    def from_json(cls, value):
+        url, headers, etag, expires_str, last_modified_str, created_at_str = value
+
+        return CacheItem(
+            url=url,
+            headers=headers,
+            etag=etag,
+            expires=parse(expires_str) if expires_str else None,
+            last_modified=parse(last_modified_str) if last_modified_str else None,
+            created_at=parse(created_at_str)
+        )
+
+
+request_cache = PersistedCache(
+    os.path.join(settings.CACHE_LOCATION, settings.CACHE_NAME)
+)
+
 
 # Cache Functions
 
 
 def check(url):
-    item = request_cache.get(url, None)
+    item = request_cache.get(url)
 
     if item is None:
         return None
@@ -112,7 +170,7 @@ def check(url):
 
 
 def get(url):
-    return request_cache.get(url, None)
+    return request_cache.get(url)
 
 
 def add(url, response):
@@ -132,14 +190,14 @@ def add(url, response):
         if key not in UNCACHED_HEADERS
     }
 
-    request_cache[url] = CacheItem(
+    request_cache.set(url, CacheItem(
         url=url,
         headers=headers,
         etag=etag,
         expires=parse(expires) if expires else None,
         last_modified=parse(last_modified) if last_modified else None,
         created_at=datetime.now(pytz.utc),
-    )
+    ))
 
     logger.debug(
         f'Adding: {url}\n'

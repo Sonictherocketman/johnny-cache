@@ -1,29 +1,14 @@
 from email.utils import formatdate
 import logging
-import sys
 
 from flask import Flask, request, Response
 import requests
 
 from . import settings, auth, cache
+from .logger import logger
 
 
 app = Flask(__name__)
-
-
-if settings.LOG_LOCATION == '-':
-    logging_config = dict(
-        handlers=(logging.StreamHandler(sys.stdout),),
-        level=settings.LOG_LEVEL
-    )
-else:
-    logging_config = dict(
-        filename=settings.LOG_LOCATION,
-        level=settings.LOG_LEVEL
-    )
-
-logging.basicConfig(**logging_config)
-logger = logging.getLogger('johnnycache')
 
 
 NO_STORE = 'no-store'
