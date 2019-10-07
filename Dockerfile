@@ -20,8 +20,6 @@ COPY . .
 
 # Production Setup
 CMD gunicorn johnny_cache.wsgi \
-    -w 2 \
-    -k gevent \
     --worker-connections=2000 \
     --backlog=1000 \
     -p gunicorn.pid \
