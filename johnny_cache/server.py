@@ -1,10 +1,9 @@
 from email.utils import formatdate
-import logging
 
 from flask import Flask, request, Response
 import requests
 
-from . import settings, auth, cache
+from . import auth, cache
 from .logger import logger
 
 

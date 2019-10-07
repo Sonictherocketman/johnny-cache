@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import logging
 import os.path
 
 from dateutil.parser import parse
@@ -19,6 +18,7 @@ UNCACHED_HEADERS = (
     'Date',
     'X-Cache',
 )
+
 
 class PersistedCache(object):
 
