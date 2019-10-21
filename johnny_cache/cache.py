@@ -30,6 +30,9 @@ class PersistedCache(object):
             self.store.update(self.load(cache_location))
         except IOError:
             logger.warn('No existing cache detected. Will create one.')
+        except Exception:
+            logger.error('Could not load cache. Removing and recreating.')
+            self.save()
         finally:
             logger.info(f'Cache prepopulated with {len(self.store.keys())} items.')
 
