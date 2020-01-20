@@ -12,6 +12,8 @@ services:
       - LOG_LEVEL=info
       # Add HTTP users here (username:password comma-separated)
       # - HTTP_USERS=admin:secret
+      # Add Redis URL here for shared cache
+      # - REDIS_URL=
     # The default log location will put logs here.
     # volumes:
     #   - /opt/johnny-cache:/opt

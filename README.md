@@ -8,7 +8,7 @@ I built this because a feed reader I run, called [Pine.blog](https://pine.blog),
 
 This caching proxy is meant to be a forward proxy between your servers and the public internet. Responses from any requests are heavily cached using a variety of methods.
 
-Johnny Cache also supports persisting the request cache across restarts with no additional configuration.
+Johnny Cache also supports persisting the request cache across restarts with no additional configuration. Persisted caches are backed by either Redis (for shared caches) or a local file cache (default).
 
 
 ## Supported Caching Methods
@@ -51,10 +51,15 @@ For a list of all the supported options, please refer to `docker-compose.yml`.
 - `MAX_CACHE_SECONDS`: The maximum number of seconds to keep a response in the cache (default 0 - forever). A negative value will cause caching to be disabled.
 - `LOG_LEVEL`: The level that the proxy will log.
 - `LOG_LOCATION`: Where to store the logs. The defaulr value of '-' will log to stdout.
+
+### Local Cache Settings
+
 - `CACHE_LOCATION`: The location to store/load the proxy cache.
 - `CACHE_NAME`: The name of the cache file.
 
+### Redis Cache Settings
 
+- `REDIS_URL`: The URL of the redis instance you'd like to use as a cache store.
 
 ## Supported Cache Operations
 
