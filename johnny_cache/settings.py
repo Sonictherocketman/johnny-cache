@@ -16,8 +16,15 @@ if os.environ.get('HTTP_USERS', False):
 else:
     HTTP_USERS = []
 
-# Cache Settings
+# Overall Cache Settings
 
 MAX_CACHE_SECONDS = int(os.environ.get('MAX_CACHE_SECONDS', 0))
+
+# Local Cache Settings
+
 CACHE_LOCATION = os.environ.get('CACHE_LOCATION', '.')
 CACHE_NAME = os.environ.get('CACHE_NAME', 'johnny.cache')
+
+# Redis Cache Settings
+
+REDIS_URL = os.environ.get('REDIS_URL', '')

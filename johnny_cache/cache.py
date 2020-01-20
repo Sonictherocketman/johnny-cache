@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import json
 import os.path
 
 from dateutil.parser import parse
 import pytz
-import json
-
+import redis
+from redis.lock import LockError
 import requests
 
 from . import settings
@@ -18,6 +19,17 @@ UNCACHED_HEADERS = (
     'Date',
     'X-Cache',
 )
+
+
+def get_cache():
+    if settings.REDIS_URL:
+        logger.info('Using Redis Cache.')
+        return RedisCache(settings.REDIS_URL)
+
+    logger.info('Using Local Cache.')
+    return PersistedCache(
+        os.path.join(settings.CACHE_LOCATION, settings.CACHE_NAME)
+    )
 
 
 class PersistedCache(object):
@@ -41,21 +53,54 @@ class PersistedCache(object):
 
     def set(self, key, value):
         self.store[key] = value
-        self.save()
+        try:
+            self.save()
+        except Exception:
+            logger.error('Could not load cache. Dumping store and regenerating.')
+            self.store = {}
+            self.save()
 
     def save(self):
         with open(self.cache_location, 'w+') as f:
             json.dump({
-                key: cache_item.to_json()
+                key: cache_item.encode()
                 for key, cache_item in self.store.items()
             }, f)
 
     def load(self, cache_location):
         with open(cache_location, 'r+') as f:
             return {
-                key: CacheItem.from_json(value)
+                key: CacheItem.decode(value)
                 for key, value in json.load(f).items()
             }
+
+
+class RedisCache(object):
+
+    def __init__(self, url):
+        self.ttl = (
+            settings.MAX_CACHE_SECONDS
+            if settings.MAX_CACHE_SECONDS > 0
+            else None
+        )
+        self.client = redis.Redis.from_url(url)
+        logger.info(f'Connected to redis: {url}')
+
+    def get(self, key):
+        value = self.client.get(key)
+        if not value:
+            return None
+        return CacheItem.decode(json.loads(value))
+
+    def set(self, key, value):
+        value = json.dumps(value.encode())
+        try:
+            with self.client.lock(f'lock__{key}', blocking_timeout=6, timeout=2):
+                self.client.set(key, value, ex=self.ttl)
+        except LockError as e:
+            logger.error(f'Failed to aquire lock for key {key}\n{e}')
+
+        return None
 
 
 @dataclass
@@ -128,7 +173,7 @@ class CacheItem:
 
         return False
 
-    def to_json(self):
+    def encode(self):
         return [
             self.url,
             self.headers,
@@ -139,7 +184,7 @@ class CacheItem:
         ]
 
     @classmethod
-    def from_json(cls, value):
+    def decode(cls, value):
         url, headers, etag, expires_str, last_modified_str, created_at_str = value
 
         return CacheItem(
@@ -152,9 +197,10 @@ class CacheItem:
         )
 
 
-request_cache = PersistedCache(
-    os.path.join(settings.CACHE_LOCATION, settings.CACHE_NAME)
-)
+# Global Cache
+
+
+request_cache = get_cache()
 
 
 # Cache Functions
