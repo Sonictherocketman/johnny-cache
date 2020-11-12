@@ -60,7 +60,7 @@ def proxy(path):
             headers['If-Modified-Since'] = formatdate(item.last_modified.timestamp())
 
     logger.info(f'MISS: {url}.')
-    with requests.get(url, headers=headers) as response:
+    with requests.get(url, headers=headers, timeout=45) as response:
         if response.ok and cache_control != NO_STORE:
             cache.add(url, response)
 

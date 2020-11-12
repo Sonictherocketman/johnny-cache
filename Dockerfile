@@ -23,5 +23,6 @@ CMD gunicorn johnny_cache.wsgi \
     --worker-connections=2000 \
     --backlog=1000 \
     -p gunicorn.pid \
+    -t 60 \
     --bind=0.0.0.0:8000
 
