@@ -150,11 +150,13 @@ class CacheItem:
             return True
 
         logger.debug(f'>>> HEAD {self.url}')
-        head_check = requests.head(self.url)
-
         try:
+            head_check = requests.head(
+                self.url,
+                timeout=10,
+            )
             head_check.raise_for_status()
-        except requests.HTTPError:
+        except Exception:
             return False
 
         etag = head_check.headers.get('etag', None)
