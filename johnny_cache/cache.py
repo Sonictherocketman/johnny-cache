@@ -156,7 +156,8 @@ class CacheItem:
                 timeout=10,
             )
             head_check.raise_for_status()
-        except Exception:
+        except Exception as e:
+            logger.error(f'>>> HEAD {self.url} failed with error: {e}')
             return False
 
         etag = head_check.headers.get('etag', None)
