@@ -11,4 +11,4 @@ pytz==2019.1
 
 # Caching
 
-redis==3.3.11
+redis==4.5.3
