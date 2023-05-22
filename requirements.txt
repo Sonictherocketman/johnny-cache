@@ -1,7 +1,7 @@
 # Web App Dependencies
 
 Flask==1.1.0
-requests==2.22.0
+requests==2.31.0
 
 # Date Parsing
 
